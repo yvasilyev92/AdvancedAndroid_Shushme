@@ -23,18 +23,31 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.location.places.PlaceBuffer;
+
 public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.PlaceViewHolder> {
 
-    private Context mContext;
 
-    /**
-     * Constructor using the context and the db cursor
-     *
-     * @param context the calling context/activity
-     */
-    public PlaceListAdapter(Context context) {
+
+
+    private Context mContext;
+    //We need to add a new member of type "PlaceBuffer" and that will act as our data source for
+    //the adapter. PlaceBuffer is an Places API object that acts as an array of Places.
+    private PlaceBuffer mPlaces;
+
+
+
+
+
+    //We must update the constructor so that it takes in a place buffer and uses it to set mPlaces.
+    public PlaceListAdapter(Context context, PlaceBuffer places) {
         this.mContext = context;
+        this.mPlaces = places;
     }
+
+
+
+
 
     /**
      * Called when RecyclerView needs a new ViewHolder of the given type to represent an item
@@ -51,16 +64,46 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.Plac
         return new PlaceViewHolder(view);
     }
 
+
+
+
+
+
     /**
      * Binds the data from a particular position in the cursor to the corresponding view holder
      *
      * @param holder   The PlaceViewHolder instance corresponding to the required position
      * @param position The current position that needs to be loaded with data
      */
+    //We must also modiy our onBindViewHolder to set the textviews to both display the name and address
+    //of the place at the specified position in mPlaces.
     @Override
     public void onBindViewHolder(PlaceViewHolder holder, int position) {
-
+        String placeName = mPlaces.get(position).getName().toString();
+        String placeAddress = mPlaces.get(position).getAddress().toString();
+        holder.nameTextView.setText(placeName);
+        holder.addressTextView.setText(placeAddress);
     }
+
+
+
+
+
+    //Finally, we make a swapPlaces method that will act like a swapCursor in a cursor adapter.
+    //So this method will simply replace the current PlaceBuffer with a new one whenever new Places
+    //are added or changed from the list. Finally to reflect those changes in the RecyclerView we need to call
+    //notifyDataSetChanged.
+    public void swapPlaces(PlaceBuffer newPlaces){
+        mPlaces = newPlaces;
+        if (mPlaces != null) {
+            // Force the RecyclerView to refresh
+            this.notifyDataSetChanged();
+        }
+    }
+
+
+
+
 
 
     /**
@@ -68,10 +111,18 @@ public class PlaceListAdapter extends RecyclerView.Adapter<PlaceListAdapter.Plac
      *
      * @return Number of items in the cursor, or 0 if null
      */
+    //We need to modify our getItemCount method so it returns the number of items in mPlaces,
+    //as long as its not null.
     @Override
     public int getItemCount() {
-        return 0;
+        if(mPlaces==null) return 0;
+        return mPlaces.getCount();
     }
+
+
+
+
+
 
     /**
      * PlaceViewHolder class for the recycler view item
